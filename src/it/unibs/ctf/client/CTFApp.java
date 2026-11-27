@@ -22,7 +22,7 @@ public class CTFApp {
 		int port = Globals.PORT;
 		
 		ClientModel model = new ClientModel();
-		ClientView view = new ClientView(Globals.WORLD_WIDTH, Globals.WORLD_HEIGHT);
+		ClientView2D view = new ClientView2D(Globals.WORLD_WIDTH, Globals.WORLD_HEIGHT);
 		ClientNetwork netw = new ClientNetwork();
 		ClientController ctrl = new ClientController(netw, model);
 		InputHandler input = new InputHandler(ctrl, view);

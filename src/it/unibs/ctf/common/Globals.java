@@ -4,13 +4,13 @@ public class Globals {
 	private Globals(){}
 	
 	public static final int TILE_SIZE = 8;
-	public static final int TILE_WIDTH = 8;
-	public static final int TILE_HEIGHT = 8;
+	public static final int WIDTH_TILES = 32;
+	public static final int HEIGHT_TILES = 32;
 	
-	public static final int WORLD_WIDTH = TILE_SIZE * TILE_WIDTH;
-	public static final int WORLD_HEIGHT = TILE_SIZE * TILE_HEIGHT;
+	public static final int WORLD_WIDTH = TILE_SIZE * WIDTH_TILES;
+	public static final int WORLD_HEIGHT = TILE_SIZE * HEIGHT_TILES;
 	
-	public static final float SCREEN_SCALE = 3f;
+	public static final float SCREEN_SCALE = 1f;
 
 	public static final float SENSITIVITY = 0.01f;
 	

@@ -11,7 +11,7 @@ import it.unibs.ctf.common.WorldData;
 public class ClientModel {
 	private int localId = -1;
 	private List<PlayerState> players = List.of();
-	private byte[][] map = new byte[Globals.TILE_WIDTH][Globals.TILE_HEIGHT];
+	private byte[][] map = new byte[Globals.WIDTH_TILES][Globals.HEIGHT_TILES];
 	
 	private final List<GameModelListener> listeners = new CopyOnWriteArrayList<>(); // not needed, but future-proof
 	public void addListener(GameModelListener l) { listeners.add(l); }

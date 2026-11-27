@@ -42,7 +42,7 @@ public class PacketIO {
 			return new InputData(up, down, left, right, shoot);
 		}
 		case WORLD: {
-			byte[][] map = new byte[Globals.TILE_WIDTH][Globals.TILE_HEIGHT];
+			byte[][] map = new byte[Globals.WIDTH_TILES][Globals.HEIGHT_TILES];
 			
 			for (int c = 0; c < map.length; ++c) {
 				for (int r = 0; r < map[0].length; ++r) {
@@ -88,8 +88,8 @@ public class PacketIO {
 			
 		} else if (packet instanceof WorldData wd) {
 			out.writeByte(WORLD);
-			for (int c = 0; c < Globals.TILE_WIDTH; ++c) {
-				for (int r = 0; r < Globals.TILE_HEIGHT; ++r) {
+			for (int c = 0; c < Globals.WIDTH_TILES; ++c) {
+				for (int r = 0; r < Globals.HEIGHT_TILES; ++r) {
 					out.writeByte(wd.map()[c][r]); // TODO: consider reducing from byte to 4bit
 				}
 			}

@@ -1,7 +1,5 @@
 package it.unibs.ctf.server;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -27,7 +25,7 @@ public class GameStateParser {
 	}
 	public void broadcastWorld(ServerGameModel model) {
 		for (ClientNetworkHandler client : clients) {
-			byte[][] map = new byte[Globals.TILE_WIDTH][Globals.TILE_WIDTH];
+			byte[][] map = new byte[Globals.WIDTH_TILES][Globals.WIDTH_TILES];
 			for (int c = 0; c < map.length; ++c) {
 				for (int r = 0; r < map[0].length; ++r) {
 					map[c][r] = model.map()[r][c].id();
@@ -41,7 +39,7 @@ public class GameStateParser {
 	public void sendWorldToPlayer(int id, ServerGameModel model) {
 		for (ClientNetworkHandler client : clients) {
 			if (client.getId() == id) {
-				byte[][] map = new byte[Globals.TILE_WIDTH][Globals.TILE_WIDTH];
+				byte[][] map = new byte[Globals.WIDTH_TILES][Globals.WIDTH_TILES];
 				for (int c = 0; c < map.length; ++c) {
 					for (int r = 0; r < map[0].length; ++r) {
 						map[c][r] = model.map()[r][c].id();

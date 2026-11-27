@@ -1,0 +1,20 @@
+#!/bin/sh
+
+
+case $1 in
+  build | b)
+    javac -d bin $(find src -name "*.java")
+    ;;
+  server | s)
+    java -cp bin it.unibs.ctf.server.CTFServerApp
+    ;;
+  client | c)
+    java -cp bin it.unibs.ctf.client.CTFApp
+    ;;
+  * )
+    printf "Available options:\n\tserver\n\tclient\n"
+esac
+
+
+
+  

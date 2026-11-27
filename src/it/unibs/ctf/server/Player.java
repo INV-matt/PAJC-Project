@@ -13,7 +13,7 @@ public class Player {
 	
 	public static final float MIN_DST_FROM_WALL = 6f;
 	public static final float SPEED = 20f; // m/s
-	public static final float ANGULAR_VEL = 10f; // deg/s
+	public static final float ANGULAR_VEL = (float)Math.toRadians(20); // rad/s
 	
 	public Player(int id, float x, float y) {
 		this.id = id;
@@ -37,33 +37,35 @@ public class Player {
 	
 	public void setAngle(float a) {
 		this.angle = a;
+		while (angle >= Math.TAU) this.angle -= Math.TAU;
+		while (angle < 0) this.angle += Math.TAU;
 	}
 
 	public void setInput(InputData input) { this.input = input;	}
 
-	public void update(float dt) {
-		float xAxis = (input.right() ? 1 : 0) - (input.left() ? 1 : 0);
-		float yAxis = (input.down() ? 1 : 0) - (input.up() ? 1 : 0);
-		float dirLen = (float)Math.sqrt(xAxis * xAxis + yAxis * yAxis);
-		if (Math.abs(dirLen) < 0.001) dirLen = 1;
-		angle += xAxis * dt * ANGULAR_VEL;
-		
-		float dx = dt * Player.SPEED * xAxis / dirLen;
-		float dy = dt * Player.SPEED * yAxis / dirLen;
-		
-		x += dx;
-		y += dy;
-	}
-	
+//	public void update(float dt) {
+//		float xAxis = (input.right() ? 1 : 0) - (input.left() ? 1 : 0);
+//		float yAxis = (input.down() ? 1 : 0) - (input.up() ? 1 : 0);
+//		float dirLen = (float)Math.sqrt(xAxis * xAxis + yAxis * yAxis);
+//		if (Math.abs(dirLen) < 0.001) dirLen = 1;
+//		angle += xAxis * dt * ANGULAR_VEL;
+//		
+//		float dx = dt * Player.SPEED * xAxis / dirLen;
+//		float dy = dt * Player.SPEED * yAxis / dirLen;
+//		
+//		x += dx;
+//		y += dy;
+//	}
+
 	public Vec2 tryMove(float dt) {
 		float xAxis = (input.right() ? 1 : 0) - (input.left() ? 1 : 0);
-		float yAxis = (input.down() ? 1 : 0) - (input.up() ? 1 : 0);
-		float dirLen = (float)Math.sqrt(xAxis * xAxis + yAxis * yAxis);
-		if (Math.abs(dirLen) < 0.001) dirLen = 1;
+		float yAxis = (input.up() ? 1 : 0) - (input.down() ? 1 : 0);
+		
+		
 		angle += xAxis * dt * ANGULAR_VEL;
 		
-		float dx = dt * Player.SPEED * xAxis / dirLen;
-		float dy = dt * Player.SPEED * yAxis / dirLen;
+		float dx = dt * yAxis * Player.SPEED * (float)Math.cos(angle);
+		float dy = dt * yAxis * Player.SPEED * (float)Math.sin(angle);
 		
 		return new Vec2(x + dx, y + dy);
 	}

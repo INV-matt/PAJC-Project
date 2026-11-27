@@ -22,28 +22,11 @@ public class WorldTile {
 	
 	public byte id() { return id; }
 	public int collisionLayer() { return collisionLayer; }
-//	public boolean collideWith(int collMask) {
-//		int pow = 0;
-//		int bit = 0;
-//		while((bit = 1 << pow) < collMask) {
-//			/*
-//			 * mask: 001010 = 10
-//			 * layr: 000110 =  6
-//			 * bit:      ^ -> true 
-//			 * bit scorre le posizioni, se combaciano, true
-//			 * 
-//			 */
-//			if ((collMask & bit) == 1 && (collMask & bit) == (collisionLayer & bit)) return true;
-//			++pow;
-//		}
-//		return false;
-//	}
+
 	
 	public boolean collideWith(int mask) {
-		// if they have ones in common, it means they collide. and is 0 iff it has all 0, ie they dont collide
-		int and = mask & this.collisionLayer;
-		System.out.printf("%d %d -> %d\n", mask, collisionLayer, and);
-		return and > 0;
+		// if they have ones in common, it means they collide. It is 0 iff the bitwise and has all 0, ie iff they dont collide
+		return (mask & this.collisionLayer) > 0;
 	}
 
 	

@@ -12,7 +12,7 @@ import it.unibs.ctf.engine.Vec2i;
 public class ServerGameModel {
 	private final Map<Integer, Player> players = new LinkedHashMap<>();
 	
-	private final WorldTile[][] map = new WorldTile[Globals.TILE_WIDTH][Globals.TILE_HEIGHT];
+	private final WorldTile[][] map = new WorldTile[Globals.WIDTH_TILES][Globals.HEIGHT_TILES];
 	
 	public ServerGameModel() {
 		initializeMap();
@@ -48,6 +48,8 @@ public class ServerGameModel {
 			Vec2 pos = p.tryMove(dt);
 			Vec2 safePos = pos.add(p.dir().mul(Player.MIN_DST_FROM_WALL));
 			Vec2i tilePos = new Vec2i((int)(safePos.x() / Globals.TILE_SIZE), (int)(safePos.y() / Globals.TILE_SIZE));
+			
+			if (tilePos.x() < 0 || tilePos.x() >= Globals.WIDTH_TILES|| tilePos.y() < 0 || tilePos.y() >= Globals.HEIGHT_TILES) continue;
 			WorldTile tile = map[tilePos.x()][tilePos.y()];
 //			System.out.printf("(%.1f %.1f) <-> (%d %d) - T:(%d %d)\n", pos.x(), pos.y(), tilePos.x(), tilePos.y(), tile.id(), tile.collisionLayer());
 			if (! tile.collideWith(p.collMask())) {
