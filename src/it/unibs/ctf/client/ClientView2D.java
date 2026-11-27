@@ -25,7 +25,7 @@ public class ClientView2D extends JPanel implements GameModelListener {
 	private transient volatile byte[][] map = new byte[Globals.WIDTH_TILES][Globals.HEIGHT_TILES];
 	private volatile int localId = -1;
 	
-	private final Color COLORS[] = {
+	private static final Color COLORS[] = {
 		new Color(0x000000), // BLACK
 		new Color(0xFFFFFF), // WHITE
 		new Color(0xFF0000), // RED
