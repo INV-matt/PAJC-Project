@@ -15,16 +15,17 @@ import it.unibs.ctf.common.PlayerState;
 
 public class ClientView3D extends JPanel implements GameModelListener {
 	private static final long serialVersionUID = 1L;
-
+	private static final float FOV = 90; // in deg
+	
 	private int width, height;
 	
 	private transient volatile byte[][] map = new byte[Globals.WIDTH_TILES][Globals.HEIGHT_TILES];
 	private volatile int localId = -1;
 	private transient volatile List<PlayerState> players = List.of();
+	private transient volatile CameraData cam = new CameraData();
 	
-//	private transient volatile double oldAngle = 0;
-//	private transient volatile double dirX = 1, dirY = 0;
-//	private transient volatile double planeX = 0, planeY = 1; // -> FOV = atan(planeY/dir.length) = 90deg
+	private transient volatile double zbuffer[];
+	
 
 
 	
@@ -34,6 +35,8 @@ public class ClientView3D extends JPanel implements GameModelListener {
 		setPreferredSize(new Dimension(width, height));
 		setFocusable(true);
 		setBackground(COLORS.BG);
+		
+		zbuffer = new double[width];
 	}
 	
 	@Override
@@ -49,28 +52,58 @@ public class ClientView3D extends JPanel implements GameModelListener {
 		if (localPlayer != null) drawWalls(g2, localPlayer);
 		
 		
-		for (PlayerState p: players) paintPlayer(g2, p);
+		for (PlayerState p: players) paintOtherPlayer(g2, localPlayer, p);
 		
 		
 		g2.dispose();
 	}
 	
-	private void paintPlayer(Graphics2D g2, PlayerState p) {
-		if (p.id() == localId) return;
+	private void paintOtherPlayer(Graphics2D g2, PlayerState localPlayer, PlayerState player) {
+		if (player.id() == localId) return;
+		
+		int w = getWidth(), h = getHeight();
+		double rx = (player.x() - localPlayer.x()) / Globals.TILE_SIZE;
+		double ry = (player.y() - localPlayer.y()) / Globals.TILE_SIZE;
+		
+		double det = cam.planeX() * cam.dirY() - cam.dirX() * cam.planeY();
+		double tX = (cam.dirY() * rx - cam.dirX() * ry) / det;
+		double tY = (-cam.planeY() * rx + cam.planeX() * ry) / det;
+
+		if (tY < 0.1) return; // behind or too close
+		
+		int screenX = (int)((w / 2.) * (1 + tX / tY));
+		int size = (int)(h / tY);
+		if (size <= 0) return;
+		
+		int left = screenX - size / 2;
+		int top = (h - size) / 2;
+		
+		int startX = Math.max(0,  left);
+		int endX = Math.min(w, left + size);
+		
+		g2.setColor(COLORS.CONTRAST_P);
+		
+		for (int x = startX; x < endX; ++x) {
+			if (tY > zbuffer[x]) continue;
+			g2.fillRect(x, top, 1, size);
+		}
+		
 	}
 	
 	private void drawWalls(Graphics2D g2, PlayerState p) {
 		double pX = p.x() / Globals.TILE_SIZE, pY = p.y() / Globals.TILE_SIZE;
-		double a = p.angle();
-		double camPlaneLength = 0.66; //.66-> fov=66deg, 1-> fov=90deg
-		double dirX = Math.cos(a), dirY = Math.sin(a);
-		double planeX = -dirY * camPlaneLength, planeY = dirX * camPlaneLength;
+		cam.set(p.angle(), 0.66);
+		
+//		double a = p.angle();
+//		double camPlaneLength = 0.66; //.66-> fov=66deg, 1-> fov=90deg
+//		double dirX = Math.cos(a), dirY = Math.sin(a);
+//		double planeX = -dirY * camPlaneLength, planeY = dirX * camPlaneLength;
 		
 		
 		for (int x = 0; x < getWidth(); ++x) {
 			double camX = 2. * x / getWidth() - 1;
-			double rayDirX = dirX + planeX * camX;
-			double rayDirY = dirY + planeY * camX;
+			double rayDirX = cam.dirX() + cam.planeX() * camX;
+			double rayDirY = cam.dirY() + cam.planeY() * camX;
 			
 			int mapX = (int)pX, mapY = (int)pY;
 			double sideDstX, sideDstY;
@@ -109,6 +142,7 @@ public class ClientView3D extends JPanel implements GameModelListener {
 			if (side == 0) 	perpWallDst = sideDstX - deltaDstX;
 			else 			perpWallDst = sideDstY - deltaDstY;
 			
+			zbuffer[x] = perpWallDst;
 			
 			// Draw Walls
 			int lineHeight = (int)(getHeight() / perpWallDst);
@@ -129,20 +163,6 @@ public class ClientView3D extends JPanel implements GameModelListener {
 	public void modelChanged(ClientModel model) {
 		localId = model.getLocalId();
 		players = List.copyOf(model.getPlayers());
-		
-//		for (PlayerState p: players) {
-//			if (p.id() == localId) {
-//				double dtheta = p.angle() - oldAngle;
-//				double dir = dirX;
-//				dirX = dir * Math.cos(- dtheta) - dirY * Math.sin(- dtheta);
-//				dirY = dir * Math.sin(-dtheta)  + dirY * Math.cos(-dtheta);
-//				double plane = planeX;
-//				planeX = plane * Math.cos(- dtheta) - planeY * Math.sin(- dtheta);
-//				planeY = plane * Math.sin(-dtheta)  + planeY * Math.cos(-dtheta);
-//				oldAngle = p.angle();
-//			}
-//		}
-		
 		repaint();
 	}
 	
