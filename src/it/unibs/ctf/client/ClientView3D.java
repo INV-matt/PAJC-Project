@@ -1,19 +1,25 @@
 package it.unibs.ctf.client;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import it.unibs.ctf.common.Globals;
 import it.unibs.ctf.common.PlayerState;
+import it.unibs.ctf.common.ServerMsg;
 
-public class ClientView3D extends JPanel implements GameModelListener {
+public class ClientView3D extends JPanel implements GameModelListener, ServerMsgReceiver {
 	private static final long serialVersionUID = 1L;
 	private static final float FOV = 90; // in deg
 	
@@ -24,19 +30,27 @@ public class ClientView3D extends JPanel implements GameModelListener {
 	private transient volatile List<PlayerState> players = List.of();
 	private transient volatile CameraData cam = new CameraData();
 	
+	private transient volatile BufferedImage frame;
+	private transient volatile int pixels[];
 	private transient volatile double zbuffer[];
 	
-
+	private transient volatile String latestServerMsg = "CIAO";
+//	private JLabel lbl_serverMsg;
 
 	
 	public ClientView3D(int w, int h) {
-		width = Math.round(w * Globals.SCREEN_SCALE); 
-		height = Math.round(h * Globals.SCREEN_SCALE);
-		setPreferredSize(new Dimension(width, height));
+		width = w;
+		height = h;
+		setPreferredSize(new Dimension(Math.round(width * Globals.SCREEN_SCALE), Math.round(height * Globals.SCREEN_SCALE)));
 		setFocusable(true);
 		setBackground(COLORS.BG);
 		
 		zbuffer = new double[width];
+
+//		setLayout(null);
+//		lbl_serverMsg = new JLabel();
+//		lbl_serverMsg.setBounds(4, getHeight() - 32, 128, 32);
+//		add(lbl_serverMsg);
 	}
 	
 	@Override
@@ -44,16 +58,23 @@ public class ClientView3D extends JPanel implements GameModelListener {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR); // crunchy textures
 		g2.setFont(getFont().deriveFont(Font.PLAIN, 8));
 		
+		initializePixelBuffer(width, height);
+		Arrays.fill(pixels, 0, pixels.length / 2, COLORS.BG_2.getRGB());
+		Arrays.fill(pixels, pixels.length / 2, pixels.length, COLORS.BG.getRGB());
+
 		
 		PlayerState localPlayer = null;
 		for (PlayerState p: players) if (p.id() == localId) localPlayer = p;
-		if (localPlayer != null) drawWalls(g2, localPlayer);
-		
+		if (localPlayer != null) drawWalls(localPlayer);
 		
 		for (PlayerState p: players) paintOtherPlayer(g2, localPlayer, p);
 		
+		g2.drawImage(frame, 0, 0, getWidth(), getHeight(), null);
+		
+		drawServerMsg(g2);
 		
 		g2.dispose();
 	}
@@ -61,7 +82,9 @@ public class ClientView3D extends JPanel implements GameModelListener {
 	private void paintOtherPlayer(Graphics2D g2, PlayerState localPlayer, PlayerState player) {
 		if (player.id() == localId) return;
 		
-		int w = getWidth(), h = getHeight();
+//		int w = getWidth(), h = getHeight(); // SCALED
+		int w = width, h = height; // UNSCALED
+		
 		double rx = (player.x() - localPlayer.x()) / Globals.TILE_SIZE;
 		double ry = (player.y() - localPlayer.y()) / Globals.TILE_SIZE;
 		
@@ -81,27 +104,29 @@ public class ClientView3D extends JPanel implements GameModelListener {
 		int startX = Math.max(0,  left);
 		int endX = Math.min(w, left + size);
 		
-		g2.setColor(COLORS.CONTRAST_P);
-		
+		int startY = Math.max(0, top);
+		int endY = Math.min(h, top + size);
+				
 		for (int x = startX; x < endX; ++x) {
 			if (tY > zbuffer[x]) continue;
-			g2.fillRect(x, top, 1, size);
+			
+			for (int y = startY, i = startY * w + x; y < endY; ++y, i += w) {
+				pixels[i] = COLORS.CONTRAST_P.getRGB();
+			}
 		}
 		
 	}
 	
-	private void drawWalls(Graphics2D g2, PlayerState p) {
+	private void drawWalls(/*Graphics2D g2,*/ PlayerState p) {
 		double pX = p.x() / Globals.TILE_SIZE, pY = p.y() / Globals.TILE_SIZE;
 		cam.set(p.angle(), 0.66);
 		
-//		double a = p.angle();
-//		double camPlaneLength = 0.66; //.66-> fov=66deg, 1-> fov=90deg
-//		double dirX = Math.cos(a), dirY = Math.sin(a);
-//		double planeX = -dirY * camPlaneLength, planeY = dirX * camPlaneLength;
+//		int w = getWidth(), h = getHeight(); // SCALED
+		int w = width, h = height; // UNSCALED
 		
 		
-		for (int x = 0; x < getWidth(); ++x) {
-			double camX = 2. * x / getWidth() - 1;
+		for (int x = 0; x < w; ++x) {
+			double camX = 2. * x / w - 1;
 			double rayDirX = cam.dirX() + cam.planeX() * camX;
 			double rayDirY = cam.dirY() + cam.planeY() * camX;
 			
@@ -145,19 +170,40 @@ public class ClientView3D extends JPanel implements GameModelListener {
 			zbuffer[x] = perpWallDst;
 			
 			// Draw Walls
-			int lineHeight = (int)(getHeight() / perpWallDst);
+			int lineHeight = 4 * (int)(h / perpWallDst);
+			int top = (h - lineHeight) / 2;
+			int start = Math.max(0, top);
+			int end = Math.min(h, top + lineHeight);
 			
 			Color wallCol = switch(hitVal) {
 			case 1 	-> side == 0 ? COLORS.PRI : COLORS.PRI_D;
 			case 2 	-> side == 0 ? COLORS.SEC : COLORS.SEC_D;
 			default	-> side == 0 ? COLORS.TER : COLORS.TER_D;
 			};
+			int rgb = wallCol.getRGB();
 			
-			g2.setColor(wallCol);
-			g2.fillRect(x, (getHeight() - lineHeight) / 2, 1, lineHeight);
+			for (int y = start, i = start * w + x; y < end; ++y, i += w) {
+				pixels[i] = rgb;
+			}
 		}
 	}
 	
+	private void drawServerMsg(Graphics2D g2) {
+		int w = getWidth(), h = getHeight();
+		Color c = Color.BLACK;
+		g2.setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 128));
+		g2.fillRect(4, h - 32, 50, 16);
+		g2.setColor(COLORS.FG);
+		g2.setStroke(new BasicStroke(2f));
+		g2.drawChars(latestServerMsg.toCharArray(), 0, latestServerMsg.length(), 8, h - 20);
+	}
+	
+	private void initializePixelBuffer(int width, int height) {
+		if (frame != null && frame.getWidth() == width && frame.getHeight() == height) return;
+		frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		pixels = ((DataBufferInt) frame.getRaster().getDataBuffer()).getData();
+		zbuffer = new double[width];
+	}
 	
 	@Override
 	public void modelChanged(ClientModel model) {
@@ -170,6 +216,11 @@ public class ClientView3D extends JPanel implements GameModelListener {
 	public void mapChanged(ClientModel model) {
 		map = model.getMap();
 		repaint();
+	}
+
+	@Override
+	public void receiveServerMsg(ServerMsg msg) {
+		latestServerMsg = msg.msg();
 	}
 }
 

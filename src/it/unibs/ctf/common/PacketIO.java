@@ -53,7 +53,10 @@ public class PacketIO {
 			return new WorldData(map);
 		}
 		case SERVER_CMD: {
-
+			StringBuffer buf = new StringBuffer();
+			char c;
+			while ((c = in.readChar()) != '\0') buf.append(c);
+			return new ServerMsg(buf.toString());
 		}
 		default: {
 //			throw new IOException(String.format("Unknown Packet Type: %d", type));
@@ -94,7 +97,10 @@ public class PacketIO {
 				}
 			}
 			
-		} else { // add server cmd object type
+		} else if (packet instanceof ServerMsg msg) {
+			out.writeByte(SERVER_CMD);
+			out.writeChars(msg.msg() + '\0');
+		} else { 
 			throw new IOException(String.format("Unknown packet: %s", packet.getClass()));
 		}
 		out.flush();

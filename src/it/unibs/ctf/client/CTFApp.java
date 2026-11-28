@@ -22,15 +22,15 @@ public class CTFApp {
 		int port = Globals.PORT;
 		
 		ClientModel model = new ClientModel();
-		ClientView2D view2d = new ClientView2D(Globals.WORLD_WIDTH, Globals.WORLD_HEIGHT);
-		ClientView3D view = new ClientView3D(600, 400);
+//		ClientView2D view2d = new ClientView2D(80, 72);
+		ClientView3D view = new ClientView3D(160, 144);
 		ClientNetwork netw = new ClientNetwork();
-		ClientController ctrl = new ClientController(netw, model);
+		ClientController ctrl = new ClientController(netw, model, view);
 		InputHandler input = new InputHandler(ctrl, view);
 
 		
 		model.addListener(view);
-		model.addListener(view2d);
+//		model.addListener(view2d);
 		netw.setDisconnectHandler(() -> SwingUtilities.invokeLater(() -> {
 			JOptionPane.showMessageDialog(null, "Disconnected");
 			System.exit(0);
@@ -55,14 +55,14 @@ public class CTFApp {
 			main.setBounds(0, 0, view.getPreferredSize().width, view.getPreferredSize().height);
 			main.setVisible(true);
 			
-			JFrame sec = new JFrame("2d");
-			sec.setLocationByPlatform(true);
-			sec.setLocationRelativeTo(null);
-			sec.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			sec.getContentPane().add(view2d);
-			sec.pack();
-			sec.setBounds(400, 0, view2d.getPreferredSize().width, view2d.getPreferredSize().height);
-			sec.setVisible(true);
+//			JFrame sec = new JFrame("2d");
+//			sec.setLocationByPlatform(true);
+//			sec.setLocationRelativeTo(null);
+//			sec.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			sec.getContentPane().add(view2d);
+//			sec.pack();
+//			sec.setBounds(400, 0, view2d.getPreferredSize().width, view2d.getPreferredSize().height);
+//			sec.setVisible(true);
 
 			
 		});

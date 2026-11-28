@@ -7,13 +7,16 @@ import it.unibs.ctf.common.InputData;
 public class ClientController implements InputListener {
 	private final ClientNetwork net;
 	
-	public ClientController(ClientNetwork net, ClientModel model) {
+	public ClientController(ClientNetwork net, ClientModel model, ServerMsgReceiver view) {
 		this.net = net;
 		net.setStateHandler(s -> SwingUtilities.invokeLater(() -> {
 			model.update(s); 
 		}));
 		net.setWorldHandler(w -> SwingUtilities.invokeLater(() -> {
 			model.updateMap(w);
+		}));
+		net.setServerMsgHandler(m -> SwingUtilities.invokeLater(() -> {
+			view.receiveServerMsg(m);
 		}));
 	}
 

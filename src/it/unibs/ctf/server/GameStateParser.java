@@ -3,9 +3,11 @@ package it.unibs.ctf.server;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+
 import it.unibs.ctf.common.GameState;
 import it.unibs.ctf.common.Globals;
 import it.unibs.ctf.common.PlayerState;
+import it.unibs.ctf.common.ServerMsg;
 import it.unibs.ctf.common.WorldData;
 
 public class GameStateParser {
@@ -32,6 +34,13 @@ public class GameStateParser {
 				}
 			}
 			client.send(new WorldData(map));
+		}
+	}
+	public void broadcastMsg(String msg) {
+		System.out.println("Broadcasting msg: " + msg);
+		ServerMsg m = new ServerMsg(msg);
+		for (ClientNetworkHandler client : clients) {
+			client.send(m);
 		}
 	}
 	

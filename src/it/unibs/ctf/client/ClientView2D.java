@@ -35,9 +35,9 @@ public class ClientView2D extends JPanel implements GameModelListener {
 	};
 	
 	public ClientView2D(int w, int h) {
-		width = Math.round(w * Globals.SCREEN_SCALE); 
-		height = Math.round(h * Globals.SCREEN_SCALE);
-		setPreferredSize(new Dimension(width, height));
+		width = w;
+		height = h;
+		setPreferredSize(new Dimension(Math.round(w * Globals.SCREEN_SCALE), Math.round(h * Globals.SCREEN_SCALE)));
 		setFocusable(true);
 		setBackground(COLORS[0]);
 	}
@@ -46,14 +46,11 @@ public class ClientView2D extends JPanel implements GameModelListener {
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g.create();
-		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-//		Graphics2D g2 = (Graphics2D) image.getGraphics();
 		
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setFont(getFont().deriveFont(Font.PLAIN, 8));
-        g2.scale(Globals.SCREEN_SCALE, Globals.SCREEN_SCALE);		
+        g2.scale(Globals.SCREEN_SCALE *width / Globals.WORLD_WIDTH, Globals.SCREEN_SCALE * height / Globals.WORLD_HEIGHT);		
 		
-//        g2.setStroke(new BasicStroke(Globals.TILE_SIZE / 4));
         g2.setColor(COLORS[1]);
         for (int c = 0; c < map.length; ++c) {
         	for (int r = 0; r < map[0].length; ++r) {
@@ -64,7 +61,6 @@ public class ClientView2D extends JPanel implements GameModelListener {
 		
 		for (PlayerState p : players) drawPlayer(g2, p);
 		
-//		g2.drawImage(image, 0, 0, getWidth(), getHeight(), COLORS[0], null);
 		g2.dispose();
 	}
 	

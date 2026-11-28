@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import it.unibs.ctf.common.GamePacket;
 import it.unibs.ctf.common.GameState;
 import it.unibs.ctf.common.PacketIO;
+import it.unibs.ctf.common.ServerMsg;
 import it.unibs.ctf.common.WorldData;
 
 public class ClientNetwork {
@@ -21,6 +22,7 @@ public class ClientNetwork {
 	
 	private Consumer<GameState> stateHandler = s -> {};
 	private Consumer<WorldData> worldHandler = w -> {};
+	private Consumer<ServerMsg> serverMsgHandler = m -> {};
 	private Runnable disconnectHandler = () -> {};
 	
 	public void setStateHandler(Consumer<GameState> stateHandler) {
@@ -28,6 +30,9 @@ public class ClientNetwork {
 	}
 	public void setWorldHandler(Consumer<WorldData> worldHandler) {
 		this.worldHandler = worldHandler;
+	}
+	public void setServerMsgHandler(Consumer<ServerMsg> serverMsgHandler) {
+		this.serverMsgHandler = serverMsgHandler;
 	}
 	public void setDisconnectHandler(Runnable disconnectHandler) {
 		this.disconnectHandler = disconnectHandler;
@@ -71,6 +76,10 @@ public class ClientNetwork {
 				packet = PacketIO.read(in);
 				if (packet instanceof GameState gs) stateHandler.accept(gs); 
 				else if (packet instanceof WorldData wd) worldHandler.accept(wd);
+				else if (packet instanceof ServerMsg msg) {
+					System.out.println("Received server msg");
+					serverMsgHandler.accept(msg);
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 				// connection lost

@@ -23,10 +23,12 @@ public class ServerController {
 	public void onPlayerJoined(int id) {
 		pendingActions.add(() -> state.addPlayer(id));
 		pendingActions.add(() -> stateParser.sendWorldToPlayer(id, state));
+		pendingActions.add(() -> stateParser.broadcastMsg(String.format("Player %d joined\n", id)));
 	}
 
 	public void onPlayerLeft(int id) {
 		pendingActions.add(() -> state.removePlayer(id));
+		pendingActions.add(() -> stateParser.broadcastMsg(String.format("Player %d left\n", id)));
 	}
 
 	public void onPlayerInput(int id, InputData input) {
